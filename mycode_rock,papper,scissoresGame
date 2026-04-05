@@ -1,0 +1,134 @@
+import random
+from rich import print  # استيراد rich للطباعة الملونة
+
+
+class Player:
+    def move(self):
+        return "rock"
+
+    def learn(self, my_move, their_move):
+        pass
+
+
+class RandomPlayer(Player):
+    def move(self):
+        return random.choice(["rock", "paper", "scissors"])
+
+
+class ReflectPlayer(Player):
+    def __init__(self):
+        self.last_move = random.choice(["rock", "paper", "scissors"])
+
+    def move(self):
+        return self.last_move
+
+    def learn(self, my_move, their_move):
+        self.last_move = their_move
+
+
+class CyclePlayer(Player):
+    def __init__(self):
+        self.moves = ["rock", "paper", "scissors"]
+        self.index = random.randint(0, 2)
+
+    def move(self):
+        return self.moves[self.index]
+
+    def learn(self, my_move, their_move):
+        self.index = (self.index + 1) % 3
+
+
+class HumanPlayer(Player):
+    def move(self):
+        while True:
+            user_input = input(
+                "Enter your move (rock, paper, scissors): "
+            ).lower()
+            if user_input in ["rock", "paper", "scissors"]:
+                return user_input
+            print("[yellow]Invalid input. Try again.[/yellow]")
+
+
+def beats(one, two):
+    return (
+        (one == "rock" and two == "scissors")
+        or (one == "scissors" and two == "paper")
+        or (one == "paper" and two == "rock")
+    )
+
+
+class Game:
+    def __init__(self, p1, p2):
+        self.p1 = p1
+        self.p2 = p2
+        self.score_p1 = 0
+        self.score_p2 = 0
+
+    def play_round(self):
+        move1 = self.p1.move()
+        move2 = self.p2.move()
+
+        print(f"\n[cyan]Player 1: {move1}  |  Player 2: {move2}[/cyan]")
+
+        if move1 == move2:
+            print("[yellow]It's a tie![/yellow]")
+        elif beats(move1, move2):
+            print("[green]Player 1 wins this round![/green]")
+            self.score_p1 += 1
+        else:
+            print("[green]Player 2 wins this round![/green]")
+            self.score_p2 += 1
+
+        print(f"[cyan]Score: {self.score_p1} - {self.score_p2}[/cyan]")
+        self.p1.learn(move1, move2)
+        self.p2.learn(move2, move1)
+
+    def play_game(self):
+        print("[cyan]Game start![/cyan]")
+        rounds = 3
+
+        for round_num in range(1, rounds + 1):
+            print(f"\n[cyan]Round {round_num}:[/cyan]")
+            self.play_round()
+
+        print("[red]\nFinal Score:[/red]")
+        print(
+            f"[red]Player 1: {self.score_p1} | Player 2: {self.score_p2}[/red]"
+        )
+
+        if self.score_p1 > self.score_p2:
+            print("[red]Player 1 wins the game!\nGame Over![/red]")
+        elif self.score_p2 > self.score_p1:
+            print("[red]Player 2 wins the game!\nGame Over![/red]")
+        else:
+            print("[red]It's a tie game!\nGame Over![/red]")
+
+
+if __name__ == "__main__":
+    while True:
+        print("[cyan]Choose your opponent:[/cyan]")
+        print("[cyan]1: Always Rock[/cyan]")
+        print("[cyan]2: Random[/cyan]")
+        print("[cyan]3: Reflect[/cyan]")
+        print("[cyan]4: Cycle[/cyan]")
+        print("[cyan]Exit to quit[/cyan]")
+
+        choice = input("Enter opponent number: ").strip()
+
+        if choice == "1":
+            opponent = Player()
+        elif choice == "2":
+            opponent = RandomPlayer()
+        elif choice == "3":
+            opponent = ReflectPlayer()
+        elif choice == "4":
+            opponent = CyclePlayer()
+        elif choice.lower() == "exit":
+            break
+        else:
+            print("[yellow]Invalid choice,"
+                  "defaulting to Always Rock.[/yellow]")
+            opponent = Player()
+
+        game = Game(HumanPlayer(), opponent)
+        game.play_game()
